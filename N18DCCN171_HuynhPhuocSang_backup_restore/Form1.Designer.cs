@@ -1,7 +1,7 @@
 ﻿
 namespace N18DCCN171_HuynhPhuocSang_backup_restore
 {
-    partial class Form1
+    partial class frmLogin
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmLogin));
             this.txtUsername = new DevExpress.XtraEditors.TextEdit();
             this.txtPassword = new DevExpress.XtraEditors.TextEdit();
             this.btnLogin = new DevExpress.XtraEditors.SimpleButton();
@@ -70,6 +70,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.btnLogin.Size = new System.Drawing.Size(125, 37);
             this.btnLogin.TabIndex = 3;
             this.btnLogin.Text = "Đăng nhập";
+            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
             // 
             // btnExit
             // 
@@ -135,7 +136,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.ckShowPassword.UseVisualStyleBackColor = true;
             this.ckShowPassword.CheckedChanged += new System.EventHandler(this.ckShowPassword_CheckedChanged);
             // 
-            // Form1
+            // frmLogin
             // 
             this.Appearance.ForeColor = System.Drawing.SystemColors.MenuHighlight;
             this.Appearance.Options.UseForeColor = true;
@@ -152,7 +153,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.Controls.Add(this.txtServername);
             this.Controls.Add(this.txtUsername);
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.Name = "Form1";
+            this.Name = "frmLogin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Đăng nhập";
             ((System.ComponentModel.ISupportInitialize)(this.txtUsername.Properties)).EndInit();

@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace N18DCCN171_HuynhPhuocSang_backup_restore
 {
-    public partial class Form1 : DevExpress.XtraEditors.XtraForm
+    public partial class frmLogin : DevExpress.XtraEditors.XtraForm
     {
-        public Form1()
+        public frmLogin()
         {
             InitializeComponent();
         }
@@ -31,5 +31,39 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
         {
             this.Close();
         }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            if (txtUsername.Text.Trim() == "" || txtPassword.Text.Trim() == "" || txtServername.Text.Trim() == "")
+            {
+                MessageBox.Show("Tên server, tên đăng nhập và mật mã không được trống", "", MessageBoxButtons.OK);
+                return;
+            }
+            Program.servername = txtServername.Text.Trim();
+            Program.username = txtUsername.Text.Trim();
+            Program.password = txtPassword.Text.Trim();
+            if (Program.KetNoi() == 0)
+            {
+                return;
+            }
+            this.Visible = false;
+            Program.conn.Close();
+            
+            try
+            {
+                
+                frmMain form = new frmMain();
+                form.Activate();
+                form.ShowDialog();
+
+                //Program.form.Hide();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error" + ex.Message, "", MessageBoxButtons.OK);
+            }
+        }
+
+       
     }
 }
