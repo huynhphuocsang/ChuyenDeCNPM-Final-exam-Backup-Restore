@@ -30,7 +30,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
         public static string strDefaultPath = "D:/Study/LearnPTIT/ChuyenDeCongNghePhanMem/Recovery";
         public static String device_type = "Disk";
         public static frmLogin frmLogin;
-
+        public static SqlDataReader reader;
 
         public static int KetNoi()
         {
@@ -59,6 +59,49 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             Application.SetCompatibleTextRenderingDefault(false);
             frmLogin = new frmLogin();
             Application.Run(frmLogin);
+        }
+
+        public static SqlDataReader ExecSqlDataReader(String cmd)
+        {
+            conn.Close();
+            SqlCommand sqlcmd = new SqlCommand(cmd, Program.conn);
+            sqlcmd.CommandType = CommandType.Text;
+            sqlcmd.CommandTimeout = 300;
+            if (Program.conn.State == ConnectionState.Closed) Program.conn.Open();
+            try
+            {
+                reader = sqlcmd.ExecuteReader();
+                return reader;
+            }
+            catch (SqlException ex)
+            {
+                Program.conn.Close();
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+        }
+        public static int ExecSqlNonQuery(String cmd, String connectionstring, string errstr)
+        {
+            conn = new SqlConnection(connectionstring);
+            SqlCommand Sqlcmd = new SqlCommand(cmd, conn);
+            Sqlcmd.CommandType = CommandType.Text;
+            Sqlcmd.CommandTimeout = 600;
+            if (conn.State == ConnectionState.Closed) conn.Open();
+            try
+            {
+                int loi = Sqlcmd.ExecuteNonQuery();
+                conn.Close();
+                return 0;
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Message.Contains("Error converting data type varchar to int"))
+                    MessageBox.Show("Bạn format lại các cột kiểu char qua int");
+                else
+                    MessageBox.Show(errstr + "\n" + ex.Message);
+                conn.Close();
+                return (ex.State);// trạng thái lỗi gửi từ RAISERROR trong sql server qua
+            }
         }
     }
 }
