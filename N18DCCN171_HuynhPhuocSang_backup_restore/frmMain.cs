@@ -16,6 +16,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
     {
         String deviceName=""; 
         String prefixBackupDevice = "DEVICE_DB";
+        int backupSetIndex = 0; 
         public frmMain()
         {
             InitializeComponent();
@@ -59,9 +60,8 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                     btnRestore.Enabled = true;
                     btnDeleteBackupDevice.Enabled = true;
                     btnDeleteBackupSet.Enabled = true;
-
-                    //lưu số lượng bản sao lưu hiện có: chưa biết làm gì !
-                    //bansaoluu = int.Parse(((DataRowView)bdsST_STT_BACKUP[0])["position"].ToString());
+                    //lưu lại vị trí để delete, cụ thể khi vừa load thì vị trí thu được là vị trí đầu tiên><số lượng record hiện có
+                    backupSetIndex = int.Parse(((DataRowView)backupSetBindingSource[0])["position"].ToString());
 
                 }
                 else
@@ -70,8 +70,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                     btnDeleteBackupDevice.Enabled = false;
                     btnDeleteBackupSet.Enabled = false;
 
-                    //lưu lại số bản backup, chưa biết để làm gì!
-                    //bansaoluu = 0;
+                    backupSetIndex = 0; 
                 }
                 //txtbansaoluu.Text = bansaoluu.ToString();
 
@@ -159,7 +158,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
 
             StrBackup = "BACKUP DATABASE " + txtDbName.Text.Trim() + " TO " + deviceName;
             if (ckDelOldBackups.Checked == true)
-                if (XtraMessageBox.Show("Bạn chắc chắn muốn xóa tất cả các bản sao lưu trước đó?", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.OK)
+                if (XtraMessageBox.Show("Bạn chắc chắn muốn xóa tất cả các bản sao lưu trước đó?", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                     StrBackup = StrBackup + " WITH INIT";
                 else
                     return;
@@ -245,6 +244,182 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                     return command.ExecuteNonQuery();
                 }
             }
+        }
+
+        private void btnDeleteBackupSet_Click(object sender, EventArgs e)
+        {
+            if (XtraMessageBox.Show("Bạn có chắc chắn xóa bản backup này không?", "Cảnh báo", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
+                return;
+            
+            if (backupSetIndex == 1)
+            {
+                if (XtraMessageBox.Show("Nếu xóa bản backup đầu tiên, sẽ mất các bản backup còn lại?", "Cảnh báo", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
+                    return;
+            }
+            String sql = GenerateDeleteScriptABackupSet(txtDbName.Text, backupSetIndex);
+
+            try
+            {
+                int err = Program.ExecSqlNonQuery(sql, Program.connstr, "Lỗi phục hồi");
+                if (err == 0)
+                {
+                    XtraMessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadBackupSets();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error" + ex, "Question", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+        public string GenerateDeleteScriptABackupSet(string dbname, int vtri)
+        {
+            string str = "DECLARE @database_name NVARCHAR(100)," +
+                " @VTRI INT SET @VTRI = " + vtri + " SET @database_name = '" + dbname + "' " +
+                "DECLARE @backup_set_id INT DECLARE @media_set_id INT DECLARE @restore_history_id TABLE (restore_history_id INT) SELECT @backup_set_id = MIN(backup_set_id) FROM msdb.dbo.backupset WHERE database_name = @database_name AND type = 'D' AND backup_set_id >= (SELECT MAX(backup_set_id) FROM msdb.dbo.backupset WHERE media_set_id = (SELECT MAX(media_set_id) FROM msdb.dbo.backupset WHERE database_name = @database_name AND type='D') AND position = @VTRI) SELECT @media_set_id = media_set_id FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id INSERT INTO @restore_history_id (restore_history_id) SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backup_set_id SET XACT_ABORT ON BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'LOI: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
+            return str;
+        }
+
+        private void backupSetGridControl_Click(object sender, EventArgs e)
+        {
+            if (backupSetBindingSource.Position == -1 || backupSetBindingSource.Count == 0 || backupSetBindingSource.DataSource == null) backupSetIndex = 0;
+            else backupSetIndex = int.Parse(((DataRowView)backupSetBindingSource[backupSetBindingSource.Position])["position"].ToString());
+            
+        }
+
+        private void btnRestore_Click(object sender, EventArgs e)
+        {
+            int err;
+            if (this.backupSetBindingSource.Count == 0)
+            {
+                XtraMessageBox.Show("Chưa có bản sao lưu để phục hồi", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
+                return;
+            }
+            if (backupSetIndex == 0)//trong trường hợp có nhưng chưa chọn trên bảng!
+            {
+                XtraMessageBox.Show("Vui lòng chọn bản sao lưu cần phục hồi", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
+                return;
+            }
+            if (Program.conn != null && Program.conn.State == ConnectionState.Open)
+                Program.conn.Close();
+
+            if (txtDbName.Text.Trim() == "" || deviceName == "") return;
+            if (ckRestoreWithTime.Checked == false)
+            {
+
+                String strRestore = " ALTER DATABASE " + txtDbName.Text.Trim()
+                    + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
+                    " USE tempdb RESTORE DATABASE " + txtDbName.Text.Trim()
+                    + " FROM   " + deviceName + " WITH FILE =  " + backupSetIndex + ", REPLACE  "
+                    + " ALTER DATABASE  " + txtDbName.Text.Trim() + " SET MULTI_USER";
+
+
+                if (XtraMessageBox.Show("Bạn chắc chắc muốn phục hồi database ", "", MessageBoxButtons.OKCancel,MessageBoxIcon.Warning) == DialogResult.OK)
+                {
+                    err = Program.ExecSqlNonQuery(strRestore, Program.connstr, "Lỗi phục hồi");
+                    if (err == 0)
+                        XtraMessageBox.Show("Phục hồi thành công", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
+                }
+                else
+                    return;
+
+            }
+
+
+            else
+            {
+
+                DateTime datetimeOfBackupSetPicked = (DateTime)((DataRowView)backupSetBindingSource[0])["backup_start_date"];
+                string strTempDatetimeBk = dateRestore.DateTime.Year + "-" + dateRestore.DateTime.Month + "-" + dateRestore.DateTime.Day + " " +
+                    timeRestore.Time.Hour + ":" + (timeRestore.Time.Minute) + ":" + timeRestore.Time.Second;
+                
+                
+                DateTime dateTimePickedToRestore;
+                dateTimePickedToRestore = DateTime.Parse(strTempDatetimeBk);
+                if ((dateRestore.DateTime.Date < datetimeOfBackupSetPicked.Date) ||
+                           (dateRestore.DateTime.Date == datetimeOfBackupSetPicked.Date && dateTimePickedToRestore.TimeOfDay.Ticks < datetimeOfBackupSetPicked.TimeOfDay.Ticks))
+                {
+                    XtraMessageBox.Show("Thời điểm muốn phục hồi phải sau bản sao lưu đã chọn!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                if (dateTimePickedToRestore > DateTime.Now)
+                {
+                    XtraMessageBox.Show("Thời điểm muốn phục hồi phải trước thời điểm hiện tại!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                if ((XtraMessageBox.Show("Bạn chắc chắn muốn phục hồi database " + txtDbName.Text + " về thời điểm " +
+                    dateTimePickedToRestore + " ?", "Cảnh báo!", MessageBoxButtons.OKCancel,MessageBoxIcon.Warning) == DialogResult.OK))
+                {
+                    String month = dateRestore.DateTime.Month < 10 ? "0" + dateRestore.DateTime.Month : dateRestore.DateTime.Month.ToString();
+                    String day = dateRestore.DateTime.Day < 10 ? "0" + dateRestore.DateTime.Day : dateRestore.DateTime.Day.ToString();
+                    String hour = timeRestore.Time.Hour < 10 ? "0" + timeRestore.Time.Hour : timeRestore.Time.Hour.ToString();
+                    String minute = timeRestore.Time.Minute < 10 ? "0" + timeRestore.Time.Minute : timeRestore.Time.Minute.ToString();
+                    String second = timeRestore.Time.Second < 10 ? "0" + timeRestore.Time.Second : timeRestore.Time.Second.ToString();
+                    String CheckTime = dateRestore.DateTime.Year + "/" + month + "/" + day + " " +
+                    hour + ":" + minute + ":" + second;
+
+                    String StrTendevice = "use " + txtDbName.Text.Trim() +
+                        "\nselect  [Begin Time]  from  fn_dblog(null,null)" +
+                        "where[Begin Time] < '" + CheckTime + "'";
+                    Program.reader = Program.ExecSqlDataReader(StrTendevice);
+                    if (Program.reader == null) return;
+                    Program.reader.Read();
+
+                    //có device thì ẩn btn newdevice
+                    if (!Program.reader.Read())
+                    {
+                        XtraMessageBox.Show("Không tìm thấy bản log trong lịch sử.!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            //restore về thời điểm người dùng nhập
+                            String strRestore = "ALTER DATABASE " + txtDbName.Text.Trim() + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE \n" +
+                                " BACKUP LOG " + txtDbName.Text + " TO DISK ='" + Program.strDefaultPath + "/" + "DEVICE_DB" +
+                                txtDbName.Text.Trim() + ".trn' WITH INIT, NORECOVERY; \n" + " USE tempdb \n " +
+                                " RESTORE DATABASE " + txtDbName.Text.Trim() + " FROM DEVICE_DB" + txtDbName.Text.Trim() + " WITH FILE = " + ((DataRowView)backupSetBindingSource[0])["position"].ToString() + ",NORECOVERY; \n" +
+                                " RESTORE DATABASE " + txtDbName.Text.Trim() + " FROM DISK= '" + Program.strDefaultPath + "/" + "DEVICE_DB" + txtDbName.Text.Trim() + ".trn' " +
+                                " WITH STOPAT= '" + strTempDatetimeBk + "' \n" +
+                                " ALTER DATABASE  " + txtDbName.Text.Trim() + " SET MULTI_USER ";
+                            //MessageBox.Show(strRestore);
+                            err = Program.ExecSqlNonQuery(strRestore, Program.connstr, "Lỗi phục hồi csdl.");
+                            if (err == 0)
+                            {
+                                XtraMessageBox.Show("Phục hồi cơ sở dữ liệu đến " + strTempDatetimeBk + " thành công!", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            XtraMessageBox.Show("Lỗi Restore:\n" + ex + "\n Tự động phục hồi về bản sao lưu mới nhất!", "Lỗi xảy ra", MessageBoxButtons.OK,MessageBoxIcon.Error);
+                            String strRestore = " ALTER DATABASE " + txtDbName.Text.Trim()
+                            + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
+                            " USE tempdb RESTORE DATABASE " + txtDbName.Text.Trim()
+                            + " FROM   " + deviceName + " WITH FILE =  " + ((DataRowView)backupSetBindingSource[0])["position"].ToString() + ", REPLACE  "
+                            + " ALTER DATABASE  " + txtDbName.Text.Trim() + " SET MULTI_USER";
+                            err = Program.ExecSqlNonQuery(strRestore, Program.connstr, "Lỗi phục hồi");
+                            if (err == 0)
+                                XtraMessageBox.Show("Phục hồi thành công", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
+
+                        }
+                    }
+
+                }
+                else return;
+            }
+        }
+
+        private void ckRestoreWithTime_CheckedChanged(object sender, EventArgs e)
+        {
+            lbInfo.Visible = !lbInfo.Visible;
+            lbNote.Visible = !lbNote.Visible;
+            dateRestore.Visible = !dateRestore.Visible;
+            timeRestore.Visible = !timeRestore.Visible;
+            dateRestore.DateTime = DateTime.Now;
+            timeRestore.Time = DateTime.Now;
         }
     }
 }

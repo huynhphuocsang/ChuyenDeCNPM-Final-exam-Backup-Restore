@@ -61,6 +61,10 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.backupDevicesBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.backupDevicesTableAdapter = new N18DCCN171_HuynhPhuocSang_backup_restore.DataSet1TableAdapters.BackupDevicesTableAdapter();
             this.ckDelOldBackups = new System.Windows.Forms.CheckBox();
+            this.lbInfo = new System.Windows.Forms.Label();
+            this.lbNote = new System.Windows.Forms.Label();
+            this.dateRestore = new DevExpress.XtraEditors.DateEdit();
+            this.timeRestore = new DevExpress.XtraEditors.TimeEdit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataSet1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.databasesBindingSource)).BeginInit();
@@ -71,6 +75,9 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             ((System.ComponentModel.ISupportInitialize)(this.backupSetGridControl)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.backupDevicesBindingSource)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dateRestore.Properties.CalendarTimeProperties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dateRestore.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.timeRestore.Properties)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -106,6 +113,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.btnDeleteBackupSet.Size = new System.Drawing.Size(145, 43);
             this.btnDeleteBackupSet.TabIndex = 2;
             this.btnDeleteBackupSet.Text = "Xóa bản sao lưu";
+            this.btnDeleteBackupSet.Click += new System.EventHandler(this.btnDeleteBackupSet_Click);
             // 
             // ckRestoreWithTime
             // 
@@ -116,6 +124,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.ckRestoreWithTime.TabIndex = 1;
             this.ckRestoreWithTime.Text = "Phục hồi theo tham số thời gian";
             this.ckRestoreWithTime.UseVisualStyleBackColor = true;
+            this.ckRestoreWithTime.CheckedChanged += new System.EventHandler(this.ckRestoreWithTime_CheckedChanged);
             // 
             // btnCreateBackupDevice
             // 
@@ -145,6 +154,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.btnRestore.Size = new System.Drawing.Size(110, 47);
             this.btnRestore.TabIndex = 0;
             this.btnRestore.Text = "Phục hồi";
+            this.btnRestore.Click += new System.EventHandler(this.btnRestore_Click);
             // 
             // btnBackup
             // 
@@ -271,6 +281,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.backupSetGridControl.TabIndex = 3;
             this.backupSetGridControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
             this.gridView1});
+            this.backupSetGridControl.Click += new System.EventHandler(this.backupSetGridControl_Click);
             // 
             // gridView1
             // 
@@ -391,12 +402,65 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.ckDelOldBackups.Text = "Xóa các bản sao lưu cũ trước khi sao lưu bản mới";
             this.ckDelOldBackups.UseVisualStyleBackColor = true;
             // 
+            // lbInfo
+            // 
+            this.lbInfo.AutoSize = true;
+            this.lbInfo.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbInfo.ForeColor = System.Drawing.Color.Red;
+            this.lbInfo.Location = new System.Drawing.Point(478, 498);
+            this.lbInfo.Name = "lbInfo";
+            this.lbInfo.Size = new System.Drawing.Size(179, 18);
+            this.lbInfo.TabIndex = 5;
+            this.lbInfo.Text = "Phục hồi đến thời điểm ";
+            this.lbInfo.Visible = false;
+            // 
+            // lbNote
+            // 
+            this.lbNote.AutoSize = true;
+            this.lbNote.Font = new System.Drawing.Font("Tahoma", 7.8F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbNote.ForeColor = System.Drawing.Color.Red;
+            this.lbNote.Location = new System.Drawing.Point(435, 540);
+            this.lbNote.Name = "lbNote";
+            this.lbNote.Size = new System.Drawing.Size(725, 17);
+            this.lbNote.TabIndex = 6;
+            this.lbNote.Text = "Lưu ý: thời gian ta chọn là thời gian ta muốn phục hồi cơ sở dữ liệu, thời điểm n" +
+    "ày diễn ra sau lần backup được chọn.";
+            this.lbNote.Visible = false;
+            // 
+            // dateRestore
+            // 
+            this.dateRestore.EditValue = null;
+            this.dateRestore.Location = new System.Drawing.Point(686, 497);
+            this.dateRestore.Name = "dateRestore";
+            this.dateRestore.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
+            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
+            this.dateRestore.Properties.CalendarTimeProperties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
+            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
+            this.dateRestore.Size = new System.Drawing.Size(118, 22);
+            this.dateRestore.TabIndex = 7;
+            this.dateRestore.Visible = false;
+            // 
+            // timeRestore
+            // 
+            this.timeRestore.EditValue = new System.DateTime(2022, 3, 20, 0, 0, 0, 0);
+            this.timeRestore.Location = new System.Drawing.Point(858, 496);
+            this.timeRestore.Name = "timeRestore";
+            this.timeRestore.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
+            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
+            this.timeRestore.Size = new System.Drawing.Size(125, 24);
+            this.timeRestore.TabIndex = 8;
+            this.timeRestore.Visible = false;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1237, 581);
             this.ControlBox = false;
+            this.Controls.Add(this.timeRestore);
+            this.Controls.Add(this.dateRestore);
+            this.Controls.Add(this.lbNote);
+            this.Controls.Add(this.lbInfo);
             this.Controls.Add(this.ckDelOldBackups);
             this.Controls.Add(this.backupSetGridControl);
             this.Controls.Add(this.fillToolStrip);
@@ -419,6 +483,9 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             ((System.ComponentModel.ISupportInitialize)(this.backupSetGridControl)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.backupDevicesBindingSource)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dateRestore.Properties.CalendarTimeProperties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dateRestore.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.timeRestore.Properties)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -456,5 +523,9 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
         private DevExpress.XtraEditors.SimpleButton btnDeleteBackupDevice;
         private DevExpress.XtraEditors.SimpleButton btnDeleteBackupSet;
         private System.Windows.Forms.CheckBox ckDelOldBackups;
+        private System.Windows.Forms.Label lbInfo;
+        private System.Windows.Forms.Label lbNote;
+        private DevExpress.XtraEditors.DateEdit dateRestore;
+        private DevExpress.XtraEditors.TimeEdit timeRestore;
     }
 }
