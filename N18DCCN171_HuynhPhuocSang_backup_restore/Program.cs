@@ -103,5 +103,27 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                 return (ex.State);// trạng thái lỗi gửi từ RAISERROR trong sql server qua
             }
         }
+
+        public static int ExecSqlNonQueryWithTracsaction(String cmd, SqlConnection conn1, SqlTransaction transaction)
+        {
+           
+            SqlCommand Sqlcmd = new SqlCommand(cmd, conn1,transaction);
+            Sqlcmd.CommandType = CommandType.Text;
+            Sqlcmd.CommandTimeout = 600;
+            if (conn1.State == ConnectionState.Closed) conn1.Open();
+                int error = Sqlcmd.ExecuteNonQuery();
+            return 0;
+        }
+
+        public static int ExecSqlNonQueryWithTracsaction2(String cmd, SqlConnection conn1)
+        {
+
+            SqlCommand Sqlcmd = new SqlCommand(cmd, conn1);
+            Sqlcmd.CommandType = CommandType.Text;
+            Sqlcmd.CommandTimeout = 600;
+            if (conn1.State == ConnectionState.Closed) conn1.Open();
+            int error = Sqlcmd.ExecuteNonQuery();
+            return 0;
+        }
     }
 }

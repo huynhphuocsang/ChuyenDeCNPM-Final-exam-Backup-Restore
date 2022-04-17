@@ -450,6 +450,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.timeRestore.Size = new System.Drawing.Size(125, 24);
             this.timeRestore.TabIndex = 8;
             this.timeRestore.Visible = false;
+            this.timeRestore.EditValueChanged += new System.EventHandler(this.timeRestore_EditValueChanged);
             // 
             // frmMain
             // 

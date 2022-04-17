@@ -99,3 +99,4 @@ D:\Study\LearnPTIT\ChuyenDeCongNghePhanMem\Final Exam\N18DCCN171_HuynhPhuocSang_
 D:\Study\LearnPTIT\ChuyenDeCongNghePhanMem\Final Exam\N18DCCN171_HuynhPhuocSang_backup_restore\N18DCCN171_HuynhPhuocSang_backup_restore\bin\Debug\es\DevExpress.XtraSpellChecker.v19.2.resources.dll
 D:\Study\LearnPTIT\ChuyenDeCongNghePhanMem\Final Exam\N18DCCN171_HuynhPhuocSang_backup_restore\N18DCCN171_HuynhPhuocSang_backup_restore\bin\Debug\ja\DevExpress.XtraSpellChecker.v19.2.resources.dll
 D:\Study\LearnPTIT\ChuyenDeCongNghePhanMem\Final Exam\N18DCCN171_HuynhPhuocSang_backup_restore\N18DCCN171_HuynhPhuocSang_backup_restore\bin\Debug\ru\DevExpress.XtraSpellChecker.v19.2.resources.dll
+D:\Study\LearnPTIT\ChuyenDeCongNghePhanMem\Final Exam\N18DCCN171_HuynhPhuocSang_backup_restore\N18DCCN171_HuynhPhuocSang_backup_restore\obj\Debug\N18DCCN171_HuynhPhuocSang_backup_restore.DialogForBackupName.resources
