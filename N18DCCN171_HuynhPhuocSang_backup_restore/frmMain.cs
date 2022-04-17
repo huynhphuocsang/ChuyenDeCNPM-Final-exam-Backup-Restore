@@ -153,24 +153,76 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
 
         private void btnBackup_Click(object sender, EventArgs e)
         {
-            String StrBackup;
-            if (txtDbName.Text.Trim() == "" || deviceName == "") return;
-
-            StrBackup = "BACKUP DATABASE " + txtDbName.Text.Trim() + " TO " + deviceName;
-            if (ckDelOldBackups.Checked == true)
-                if (XtraMessageBox.Show("Bạn chắc chắn muốn xóa tất cả các bản sao lưu trước đó?", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-                    StrBackup = StrBackup + " WITH INIT";
-                else
-                    return;
-
-            int err = Program.ExecSqlNonQuery(StrBackup, Program.connstr, "");
-            if (err != 0)
+            using(DialogForBackupName dialog = new DialogForBackupName())
             {
-                XtraMessageBox.Show("Backup " + txtDbName.Text + " thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                    dialog.ShowDialog(); 
+                    string backupName = dialog.backupName.Trim();
+
+                    String StrBackup;
+                    if (txtDbName.Text.Trim() == "" || deviceName == "") return;
+
+                    StrBackup = "BACKUP DATABASE " + txtDbName.Text.Trim() + " TO " + deviceName + " WITH NAME = N'"+backupName+"'";
+                if (ckDelOldBackups.Checked == true)
+                    if (XtraMessageBox.Show("Bạn chắc chắn muốn xóa tất cả các bản sao lưu trước đó?", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                    {
+                        StrBackup = StrBackup + ",INIT";
+                    }
+                    else
+                        return;
+
+                
+                int errClear = Program.ExecSqlNonQuery(StrBackup, Program.connstr, "");
+                if (errClear != 0)
+                {
+                    XtraMessageBox.Show("Backup " + txtDbName.Text + " thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                
+                //khi xóa nhiều bản backup phải có transaction: 
+                if (ckDelOldBackups.Checked == true)
+                {
+                    SqlConnection connection = new SqlConnection(Program.connstr);
+                    connection.Open();
+                    String queryStr = "SELECT backup_set_id FROM msdb.dbo.backupset WHERE database_name = N'" + txtDbName + "' AND(type = 'D')"
+                          + " AND backup_set_id< (SELECT MAX(backup_set_id)"
+                      + " FROM msdb.dbo.backupset"
+                      + " WHERE database_name = N'" + txtDbName + "' AND type = 'D' AND position = 1)";
+                    SqlCommand command = new SqlCommand(queryStr, connection);
+                    SqlDataReader reader = command.ExecuteReader();
+                    List<int> backupsetIds = new List<int>();
+                    while (reader.Read()) backupsetIds.Add(reader.GetInt32(0));
+                    reader.Close();
+
+
+                    SqlTransaction transaction = connection.BeginTransaction();
+                    try
+                    {
+                        int err;
+
+                        for(int i = 0; i < backupsetIds.Count; i++) 
+                        { 
+                            String sql = GenerateDeleteScriptABackupSetByBackupsetId(txtDbName.Text, backupsetIds.ElementAt(i));
+
+                            err = Program.ExecSqlNonQueryWithTracsaction(sql, connection, transaction);
+                        }
+                        transaction.Commit();
+                        connection.Close();
+
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        XtraMessageBox.Show(ex.ToString(), "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        XtraMessageBox.Show("Không thể xóa các bản backup!\n Hãy thử lại!", "Thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        connection.Close();
+                        return;
+                    }
+                    
+                }
+                XtraMessageBox.Show("Backup " + txtDbName.Text + " thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadBackupSets();
             }
-            XtraMessageBox.Show("Backup " + txtDbName.Text + " thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            LoadBackupSets();
         }
 
         private void btnCreateBackupDevice_Click(object sender, EventArgs e)
@@ -251,11 +303,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             if (XtraMessageBox.Show("Bạn có chắc chắn xóa bản backup này không?", "Cảnh báo", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
                 return;
             
-            if (backupSetIndex == 1)
-            {
-                if (XtraMessageBox.Show("Nếu xóa bản backup đầu tiên, sẽ mất các bản backup còn lại?", "Cảnh báo", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
-                    return;
-            }
+           
             String sql = GenerateDeleteScriptABackupSet(txtDbName.Text, backupSetIndex);
 
             try
@@ -274,16 +322,38 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                 return;
             }
         }
-        public string GenerateDeleteScriptABackupSet(string dbname, int vtri)
+        public string GenerateDeleteScriptABackupSet(string dbname, int position)
         {
             string str = "DECLARE @database_name NVARCHAR(100)," +
-                " @VTRI INT SET @VTRI = " + vtri + " SET @database_name = '" + dbname + "' " +
-                "DECLARE @backup_set_id INT DECLARE @media_set_id INT DECLARE @restore_history_id TABLE (restore_history_id INT) SELECT @backup_set_id = MIN(backup_set_id) FROM msdb.dbo.backupset WHERE database_name = @database_name AND type = 'D' AND backup_set_id >= (SELECT MAX(backup_set_id) FROM msdb.dbo.backupset WHERE media_set_id = (SELECT MAX(media_set_id) FROM msdb.dbo.backupset WHERE database_name = @database_name AND type='D') AND position = @VTRI) SELECT @media_set_id = media_set_id FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id INSERT INTO @restore_history_id (restore_history_id) SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backup_set_id SET XACT_ABORT ON BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'LOI: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
+                " @VTRI INT SET @VTRI = " + position + " SET @database_name = '" + dbname + "' " +
+                "DECLARE @backup_set_id " +
+                "INT DECLARE @media_set_id " +
+                "INT DECLARE @restore_history_id TABLE (restore_history_id INT) " +
+                "SELECT @backup_set_id = MIN(backup_set_id) FROM msdb.dbo.backupset " +
+                "WHERE database_name = @database_name AND type = 'D' AND backup_set_id >= (SELECT MAX(backup_set_id)" +
+                " FROM msdb.dbo.backupset WHERE media_set_id = (SELECT MAX(media_set_id) FROM msdb.dbo.backupset " +
+                    "WHERE database_name = @database_name AND type='D') AND position = @VTRI) " +
+                    "SELECT @media_set_id = media_set_id FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id INSERT INTO @restore_history_id (restore_history_id) SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backup_set_id SET XACT_ABORT ON BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'LOI: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
             return str;
         }
-
+        public string GenerateDeleteScriptABackupSetByBackupsetId(string dbname, int backupset_id)
+        {
+            string str = "DECLARE @database_name NVARCHAR(100)," +
+                " @backupSetId INT SET @backupSetId = " + backupset_id + " SET @database_name = '" + dbname + "' " +
+                "DECLARE @backup_set_id " +
+                "INT DECLARE @media_set_id " +
+                "INT DECLARE @restore_history_id TABLE (restore_history_id INT) " +
+                "SELECT @backup_set_id = MIN(backup_set_id) FROM msdb.dbo.backupset " +
+                "WHERE database_name = @database_name AND type = 'D' AND backup_set_id >= (SELECT MAX(backup_set_id)" +
+                " FROM msdb.dbo.backupset WHERE media_set_id = (SELECT MAX(media_set_id) FROM msdb.dbo.backupset " +
+                    "WHERE database_name = @database_name AND type='D') AND backup_set_id = @backupSetId) " +
+                    "SELECT @media_set_id = media_set_id FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id INSERT INTO @restore_history_id (restore_history_id) SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backup_set_id SET XACT_ABORT ON BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'LOI: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
+            return str;
+        }
         private void backupSetGridControl_Click(object sender, EventArgs e)
         {
+            //MessageBox.Show(((DataRowView)backupSetBindingSource[gridView1.FocusedRowHandle])["position"].ToString()); 
+
             if (backupSetBindingSource.Position == -1 || backupSetBindingSource.Count == 0 || backupSetBindingSource.DataSource == null) backupSetIndex = 0;
             else backupSetIndex = int.Parse(((DataRowView)backupSetBindingSource[backupSetBindingSource.Position])["position"].ToString());
             
@@ -309,15 +379,13 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             if (ckRestoreWithTime.Checked == false)
             {
 
-                String strRestore = " ALTER DATABASE " + txtDbName.Text.Trim()
+                if (XtraMessageBox.Show("Bạn chắc chắc muốn phục hồi database ", "", MessageBoxButtons.OKCancel,MessageBoxIcon.Warning) == DialogResult.OK)
+                {
+                    String strRestore = " ALTER DATABASE " + txtDbName.Text.Trim()
                     + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
                     " USE tempdb RESTORE DATABASE " + txtDbName.Text.Trim()
                     + " FROM   " + deviceName + " WITH FILE =  " + backupSetIndex + ", REPLACE  "
                     + " ALTER DATABASE  " + txtDbName.Text.Trim() + " SET MULTI_USER";
-
-
-                if (XtraMessageBox.Show("Bạn chắc chắc muốn phục hồi database ", "", MessageBoxButtons.OKCancel,MessageBoxIcon.Warning) == DialogResult.OK)
-                {
                     err = Program.ExecSqlNonQuery(strRestore, Program.connstr, "Lỗi phục hồi");
                     if (err == 0)
                         XtraMessageBox.Show("Phục hồi thành công", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
@@ -332,6 +400,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             {
 
                 DateTime datetimeOfBackupSetPicked = (DateTime)((DataRowView)backupSetBindingSource[0])["backup_start_date"];
+
                 string strTempDatetimeBk = dateRestore.DateTime.Year + "-" + dateRestore.DateTime.Month + "-" + dateRestore.DateTime.Day + " " +
                     timeRestore.Time.Hour + ":" + (timeRestore.Time.Minute) + ":" + timeRestore.Time.Second;
                 
@@ -341,7 +410,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                 if ((dateRestore.DateTime.Date < datetimeOfBackupSetPicked.Date) ||
                            (dateRestore.DateTime.Date == datetimeOfBackupSetPicked.Date && dateTimePickedToRestore.TimeOfDay.Ticks < datetimeOfBackupSetPicked.TimeOfDay.Ticks))
                 {
-                    XtraMessageBox.Show("Thời điểm muốn phục hồi phải sau bản sao lưu đã chọn!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    XtraMessageBox.Show("Thời điểm muốn phục hồi phải sau bản sao lưu cuối cùng!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 if (dateTimePickedToRestore > DateTime.Now)
@@ -360,6 +429,8 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                     String CheckTime = dateRestore.DateTime.Year + "/" + month + "/" + day + " " +
                     hour + ":" + minute + ":" + second;
 
+
+                    //kiểm tra bản log: vì bản chất là khi restore về một thời điểm bất kỳ phải yêu cầu cả bản full backup và file log
                     String StrTendevice = "use " + txtDbName.Text.Trim() +
                         "\nselect  [Begin Time]  from  fn_dblog(null,null)" +
                         "where[Begin Time] < '" + CheckTime + "'";
@@ -367,19 +438,21 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                     if (Program.reader == null) return;
                     Program.reader.Read();
 
-                    //có device thì ẩn btn newdevice
+                    //nếu không có bản log: 
                     if (!Program.reader.Read())
                     {
                         XtraMessageBox.Show("Không tìm thấy bản log trong lịch sử.!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+                    //có bản log, ta tiến hành restore: 
                     else
                     {
                         try
                         {
-                            //restore về thời điểm người dùng nhập
+                           
                             String strRestore = "ALTER DATABASE " + txtDbName.Text.Trim() + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE \n" +
                                 " BACKUP LOG " + txtDbName.Text + " TO DISK ='" + Program.strDefaultPath + "/" + "DEVICE_DB" +
-                                txtDbName.Text.Trim() + ".trn' WITH INIT, NORECOVERY; \n" + " USE tempdb \n " +
+                                txtDbName.Text.Trim() + ".trn' WITH INIT, NORECOVERY; \n" 
+                                + " USE tempdb \n " +
                                 " RESTORE DATABASE " + txtDbName.Text.Trim() + " FROM DEVICE_DB" + txtDbName.Text.Trim() + " WITH FILE = " + ((DataRowView)backupSetBindingSource[0])["position"].ToString() + ",NORECOVERY; \n" +
                                 " RESTORE DATABASE " + txtDbName.Text.Trim() + " FROM DISK= '" + Program.strDefaultPath + "/" + "DEVICE_DB" + txtDbName.Text.Trim() + ".trn' " +
                                 " WITH STOPAT= '" + strTempDatetimeBk + "' \n" +
@@ -420,6 +493,11 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             timeRestore.Visible = !timeRestore.Visible;
             dateRestore.DateTime = DateTime.Now;
             timeRestore.Time = DateTime.Now;
+        }
+
+        private void timeRestore_EditValueChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
