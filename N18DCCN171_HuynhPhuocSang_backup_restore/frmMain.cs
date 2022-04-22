@@ -38,7 +38,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.databasesTableAdapter.Fill(this.dataSet1.databases);
 
             databasesGridControl_Click(sender,e);
-
+            txtDbName.Enabled = false; 
 
         }
 
@@ -194,6 +194,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                     while (reader.Read()) backupsetIds.Add(reader.GetInt32(0));
                     reader.Close();
 
+                    backupsetIds.Add(1);
 
                     SqlTransaction transaction = connection.BeginTransaction();
                     try
