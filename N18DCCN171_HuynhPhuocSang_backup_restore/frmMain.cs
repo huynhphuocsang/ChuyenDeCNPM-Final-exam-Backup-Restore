@@ -326,29 +326,21 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
         public string GenerateDeleteScriptABackupSet(string dbname, int position)
         {
             string str = "DECLARE @database_name NVARCHAR(100)," +
-                " @VTRI INT SET @VTRI = " + position + " SET @database_name = '" + dbname + "' " +
-                "DECLARE @backup_set_id " +
-                "INT DECLARE @media_set_id " +
-                "INT DECLARE @restore_history_id TABLE (restore_history_id INT) " +
-                "SELECT @backup_set_id = MIN(backup_set_id) FROM msdb.dbo.backupset " +
-                "WHERE database_name = @database_name AND type = 'D' AND backup_set_id >= (SELECT MAX(backup_set_id)" +
-                " FROM msdb.dbo.backupset WHERE media_set_id = (SELECT MAX(media_set_id) FROM msdb.dbo.backupset " +
-                    "WHERE database_name = @database_name AND type='D') AND position = @VTRI) " +
-                    "SELECT @media_set_id = media_set_id FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id INSERT INTO @restore_history_id (restore_history_id) SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backup_set_id SET XACT_ABORT ON BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'LOI: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
+                " @Pos INT SET @Pos = " + position + " SET @database_name = N'" + dbname + "' " +
+                "DECLARE @backup_set_id INT  DECLARE @restore_history_id TABLE(restore_history_id INT) SELECT @backup_set_id = backup_set_id FROM msdb.dbo.backupset WHERE database_name = @database_name AND type = 'D' AND backup_set_id = (SELECT MAX(backup_set_id) FROM msdb.dbo.backupset WHERE media_set_id = (SELECT MAX(media_set_id) FROM msdb.dbo.backupset WHERE database_name = @database_name AND type = 'D') AND position = @Pos) " +
+                "INSERT INTO @restore_history_id(restore_history_id) SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backup_set_id SET XACT_ABORT ON  BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN(SELECT restore_history_id FROM @restore_history_id) " +
+                " DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN(SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN(SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'Error: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
             return str;
         }
         public string GenerateDeleteScriptABackupSetByBackupsetId(string dbname, int backupset_id)
         {
             string str = "DECLARE @database_name NVARCHAR(100)," +
                 " @backupSetId INT SET @backupSetId = " + backupset_id + " SET @database_name = '" + dbname + "' " +
-                "DECLARE @backup_set_id " +
-                "INT DECLARE @media_set_id " +
-                "INT DECLARE @restore_history_id TABLE (restore_history_id INT) " +
-                "SELECT @backup_set_id = MIN(backup_set_id) FROM msdb.dbo.backupset " +
-                "WHERE database_name = @database_name AND type = 'D' AND backup_set_id >= (SELECT MAX(backup_set_id)" +
-                " FROM msdb.dbo.backupset WHERE media_set_id = (SELECT MAX(media_set_id) FROM msdb.dbo.backupset " +
-                    "WHERE database_name = @database_name AND type='D') AND backup_set_id = @backupSetId) " +
-                    "SELECT @media_set_id = media_set_id FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id INSERT INTO @restore_history_id (restore_history_id) SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backup_set_id SET XACT_ABORT ON BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backup_set_id DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN (SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backup_set_id COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'LOI: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
+                "DECLARE @restore_history_id TABLE(restore_history_id INT) " +
+                "INSERT INTO @restore_history_id(restore_history_id) " +
+                "SELECT DISTINCT restore_history_id FROM msdb.dbo.restorehistory WHERE backup_set_id = @backupSetId " +
+                "SET XACT_ABORT ON  BEGIN TRANSACTION BEGIN TRY DELETE FROM msdb.dbo.backupfile WHERE backup_set_id = @backupSetId DELETE FROM msdb.dbo.backupfilegroup WHERE backup_set_id = @backupSetId DELETE FROM msdb.dbo.restorefile WHERE restore_history_id IN(SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorefilegroup WHERE restore_history_id IN(SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.restorehistory WHERE restore_history_id IN(SELECT restore_history_id FROM @restore_history_id) DELETE FROM msdb.dbo.backupset WHERE backup_set_id = @backupSetId " +
+                 "COMMIT TRANSACTION END TRY BEGIN CATCH ROLLBACK DECLARE @ErrMess VARCHAR(1000) SELECT @ErrMess = 'Error: ' + ERROR_MESSAGE() RAISERROR(@ErrMess, 16, 1) END CATCH";
             return str;
         }
         private void backupSetGridControl_Click(object sender, EventArgs e)
@@ -422,11 +414,17 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                 if ((XtraMessageBox.Show("Bạn chắc chắn muốn phục hồi database " + txtDbName.Text + " về thời điểm " +
                     dateTimePickedToRestore + " ?", "Cảnh báo!", MessageBoxButtons.OKCancel,MessageBoxIcon.Warning) == DialogResult.OK))
                 {
-                    String month = dateRestore.DateTime.Month < 10 ? "0" + dateRestore.DateTime.Month : dateRestore.DateTime.Month.ToString();
-                    String day = dateRestore.DateTime.Day < 10 ? "0" + dateRestore.DateTime.Day : dateRestore.DateTime.Day.ToString();
-                    String hour = timeRestore.Time.Hour < 10 ? "0" + timeRestore.Time.Hour : timeRestore.Time.Hour.ToString();
-                    String minute = timeRestore.Time.Minute < 10 ? "0" + timeRestore.Time.Minute : timeRestore.Time.Minute.ToString();
-                    String second = timeRestore.Time.Second < 10 ? "0" + timeRestore.Time.Second : timeRestore.Time.Second.ToString();
+                    //String month = dateRestore.DateTime.Month < 10 ? "0" + dateRestore.DateTime.Month : dateRestore.DateTime.Month.ToString();
+                    //String day = dateRestore.DateTime.Day < 10 ? "0" + dateRestore.DateTime.Day : dateRestore.DateTime.Day.ToString();
+                    //String hour = timeRestore.Time.Hour < 10 ? "0" + timeRestore.Time.Hour : timeRestore.Time.Hour.ToString();
+                    //String minute = timeRestore.Time.Minute < 10 ? "0" + timeRestore.Time.Minute : timeRestore.Time.Minute.ToString();
+                    //String second = timeRestore.Time.Second < 10 ? "0" + timeRestore.Time.Second : timeRestore.Time.Second.ToString();
+
+                    String month =  dateRestore.DateTime.Month.ToString();
+                    String day =  dateRestore.DateTime.Day.ToString();
+                    String hour = timeRestore.Time.Hour.ToString();
+                    String minute = timeRestore.Time.Minute.ToString();
+                    String second =  timeRestore.Time.Second.ToString();
                     String CheckTime = dateRestore.DateTime.Year + "/" + month + "/" + day + " " +
                     hour + ":" + minute + ":" + second;
 

@@ -631,11 +631,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore {
             
             private global::System.Data.DataColumn columnuser_name;
             
-            private global::System.Data.DataColumn columnbackup_set_id;
-            
             private global::System.Data.DataColumn columndatabase_name;
-            
-            private global::System.Data.DataColumn columnmedia_set_id;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
@@ -704,25 +700,9 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
-            public global::System.Data.DataColumn backup_set_idColumn {
-                get {
-                    return this.columnbackup_set_id;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
             public global::System.Data.DataColumn database_nameColumn {
                 get {
                     return this.columndatabase_name;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
-            public global::System.Data.DataColumn media_set_idColumn {
-                get {
-                    return this.columnmedia_set_id;
                 }
             }
             
@@ -763,26 +743,17 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
-            public BackupSetRow AddBackupSetRow(int position, string name, System.DateTime backup_start_date, string user_name, string database_name, int media_set_id) {
+            public BackupSetRow AddBackupSetRow(int position, string name, System.DateTime backup_start_date, string user_name, string database_name) {
                 BackupSetRow rowBackupSetRow = ((BackupSetRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         position,
                         name,
                         backup_start_date,
                         user_name,
-                        null,
-                        database_name,
-                        media_set_id};
+                        database_name};
                 rowBackupSetRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowBackupSetRow);
                 return rowBackupSetRow;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
-            public BackupSetRow FindBybackup_set_id(int backup_set_id) {
-                return ((BackupSetRow)(this.Rows.Find(new object[] {
-                            backup_set_id})));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -806,9 +777,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore {
                 this.columnname = base.Columns["name"];
                 this.columnbackup_start_date = base.Columns["backup_start_date"];
                 this.columnuser_name = base.Columns["user_name"];
-                this.columnbackup_set_id = base.Columns["backup_set_id"];
                 this.columndatabase_name = base.Columns["database_name"];
-                this.columnmedia_set_id = base.Columns["media_set_id"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -822,24 +791,11 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore {
                 base.Columns.Add(this.columnbackup_start_date);
                 this.columnuser_name = new global::System.Data.DataColumn("user_name", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnuser_name);
-                this.columnbackup_set_id = new global::System.Data.DataColumn("backup_set_id", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnbackup_set_id);
                 this.columndatabase_name = new global::System.Data.DataColumn("database_name", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columndatabase_name);
-                this.columnmedia_set_id = new global::System.Data.DataColumn("media_set_id", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnmedia_set_id);
-                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
-                                this.columnbackup_set_id}, true));
                 this.columnname.MaxLength = 128;
                 this.columnuser_name.MaxLength = 128;
-                this.columnbackup_set_id.AutoIncrement = true;
-                this.columnbackup_set_id.AutoIncrementSeed = -1;
-                this.columnbackup_set_id.AutoIncrementStep = -1;
-                this.columnbackup_set_id.AllowDBNull = false;
-                this.columnbackup_set_id.ReadOnly = true;
-                this.columnbackup_set_id.Unique = true;
                 this.columndatabase_name.MaxLength = 128;
-                this.columnmedia_set_id.AllowDBNull = false;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1349,17 +1305,6 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
-            public int backup_set_id {
-                get {
-                    return ((int)(this[this.tableBackupSet.backup_set_idColumn]));
-                }
-                set {
-                    this[this.tableBackupSet.backup_set_idColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
             public string database_name {
                 get {
                     try {
@@ -1371,17 +1316,6 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore {
                 }
                 set {
                     this[this.tableBackupSet.database_nameColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
-            public int media_set_id {
-                get {
-                    return ((int)(this[this.tableBackupSet.media_set_idColumn]));
-                }
-                set {
-                    this[this.tableBackupSet.media_set_idColumn] = value;
                 }
             }
             
@@ -1872,9 +1806,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore.DataSet1TableAdapters {
             tableMapping.ColumnMappings.Add("name", "name");
             tableMapping.ColumnMappings.Add("backup_start_date", "backup_start_date");
             tableMapping.ColumnMappings.Add("user_name", "user_name");
-            tableMapping.ColumnMappings.Add("backup_set_id", "backup_set_id");
             tableMapping.ColumnMappings.Add("database_name", "database_name");
-            tableMapping.ColumnMappings.Add("media_set_id", "media_set_id");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
@@ -1931,7 +1863,7 @@ SELECT backup_set_id, position, name, backup_start_date, user_name, database_nam
             this._commandCollection = new global::System.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = @"SELECT backup_set_id, position, name, backup_start_date, user_name, database_name, media_set_id
+            this._commandCollection[0].CommandText = @"SELECT position, name, backup_start_date, user_name, database_name
 FROM     msdb.dbo.backupset
 WHERE  (database_name = @DBNAME) AND (type = 'D') AND (media_set_id =
                       (SELECT MAX(media_set_id) AS Expr1
