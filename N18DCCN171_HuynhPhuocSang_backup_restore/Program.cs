@@ -17,7 +17,6 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
 
         public static SqlConnection conn = new SqlConnection();
         public static string connstr;
-        public static SqlDataAdapter da;
 
         public static string servername = "DESKTOP-MAA5MC1";
         public static string username = "sa";
@@ -25,9 +24,11 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
         public static string database = "";
         public static string mlogin = "";
 
-        public static int nambatdau = 2016;//để cho cmbNK tự động tính dựa vào năm này
-        public static int flagRestore = 0;// check whether user restored db? 
-        public static string strDefaultPath = "D:/Study/LearnPTIT/ChuyenDeCongNghePhanMem/Recovery";
+
+
+        //tạo ra directory tự động: không phụ thuộc vào máy
+        public static string strDefaultPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments)+"\\backupdevice";
+
         public static String device_type = "Disk";
         public static frmLogin frmLogin;
         public static SqlDataReader reader;

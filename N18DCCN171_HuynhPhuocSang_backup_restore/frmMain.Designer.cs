@@ -65,6 +65,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.lbNote = new System.Windows.Forms.Label();
             this.dateRestore = new DevExpress.XtraEditors.DateEdit();
             this.timeRestore = new DevExpress.XtraEditors.TimeEdit();
+            this.lbStorage = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataSet1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.databasesBindingSource)).BeginInit();
@@ -183,6 +184,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             // tableAdapterManager
             // 
             this.tableAdapterManager.BackupDataSetBeforeUpdate = false;
+            this.tableAdapterManager.BackupSetTableAdapter = null;
             this.tableAdapterManager.Connection = null;
             this.tableAdapterManager.UpdateOrder = N18DCCN171_HuynhPhuocSang_backup_restore.DataSet1TableAdapters.TableAdapterManager.UpdateOrderOption.InsertUpdateDelete;
             // 
@@ -277,7 +279,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.backupSetGridControl.Location = new System.Drawing.Point(370, 123);
             this.backupSetGridControl.MainView = this.gridView1;
             this.backupSetGridControl.Name = "backupSetGridControl";
-            this.backupSetGridControl.Size = new System.Drawing.Size(867, 290);
+            this.backupSetGridControl.Size = new System.Drawing.Size(867, 148);
             this.backupSetGridControl.TabIndex = 3;
             this.backupSetGridControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
             this.gridView1});
@@ -395,7 +397,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             // ckDelOldBackups
             // 
             this.ckDelOldBackups.AutoSize = true;
-            this.ckDelOldBackups.Location = new System.Drawing.Point(651, 438);
+            this.ckDelOldBackups.Location = new System.Drawing.Point(662, 349);
             this.ckDelOldBackups.Name = "ckDelOldBackups";
             this.ckDelOldBackups.Size = new System.Drawing.Size(332, 21);
             this.ckDelOldBackups.TabIndex = 4;
@@ -407,7 +409,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.lbInfo.AutoSize = true;
             this.lbInfo.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbInfo.ForeColor = System.Drawing.Color.Red;
-            this.lbInfo.Location = new System.Drawing.Point(478, 498);
+            this.lbInfo.Location = new System.Drawing.Point(489, 409);
             this.lbInfo.Name = "lbInfo";
             this.lbInfo.Size = new System.Drawing.Size(179, 18);
             this.lbInfo.TabIndex = 5;
@@ -419,7 +421,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.lbNote.AutoSize = true;
             this.lbNote.Font = new System.Drawing.Font("Tahoma", 7.8F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbNote.ForeColor = System.Drawing.Color.Red;
-            this.lbNote.Location = new System.Drawing.Point(435, 540);
+            this.lbNote.Location = new System.Drawing.Point(446, 451);
             this.lbNote.Name = "lbNote";
             this.lbNote.Size = new System.Drawing.Size(725, 17);
             this.lbNote.TabIndex = 6;
@@ -430,7 +432,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             // dateRestore
             // 
             this.dateRestore.EditValue = null;
-            this.dateRestore.Location = new System.Drawing.Point(686, 497);
+            this.dateRestore.Location = new System.Drawing.Point(697, 408);
             this.dateRestore.Name = "dateRestore";
             this.dateRestore.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
@@ -443,7 +445,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             // timeRestore
             // 
             this.timeRestore.EditValue = new System.DateTime(2022, 3, 20, 0, 0, 0, 0);
-            this.timeRestore.Location = new System.Drawing.Point(858, 496);
+            this.timeRestore.Location = new System.Drawing.Point(869, 407);
             this.timeRestore.Name = "timeRestore";
             this.timeRestore.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
@@ -452,12 +454,23 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.timeRestore.Visible = false;
             this.timeRestore.EditValueChanged += new System.EventHandler(this.timeRestore_EditValueChanged);
             // 
+            // lbStorage
+            // 
+            this.lbStorage.AutoSize = true;
+            this.lbStorage.ForeColor = System.Drawing.Color.Red;
+            this.lbStorage.Location = new System.Drawing.Point(428, 540);
+            this.lbStorage.Name = "lbStorage";
+            this.lbStorage.Size = new System.Drawing.Size(42, 17);
+            this.lbStorage.TabIndex = 9;
+            this.lbStorage.Text = "label1";
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1237, 581);
             this.ControlBox = false;
+            this.Controls.Add(this.lbStorage);
             this.Controls.Add(this.timeRestore);
             this.Controls.Add(this.dateRestore);
             this.Controls.Add(this.lbNote);
@@ -528,5 +541,6 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
         private System.Windows.Forms.Label lbNote;
         private DevExpress.XtraEditors.DateEdit dateRestore;
         private DevExpress.XtraEditors.TimeEdit timeRestore;
+        private System.Windows.Forms.Label lbStorage;
     }
 }
