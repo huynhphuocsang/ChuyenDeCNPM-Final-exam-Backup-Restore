@@ -1,5 +1,6 @@
 ﻿using DevExpress.XtraEditors;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -38,8 +39,14 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
             this.databasesTableAdapter.Fill(this.dataSet1.databases);
 
             databasesGridControl_Click(sender,e);
-            txtDbName.Enabled = false; 
+            txtDbName.Enabled = false;
 
+            if (!Directory.Exists(Program.strDefaultPath))
+            {
+                Directory.CreateDirectory(Program.strDefaultPath); 
+                XtraMessageBox.Show("Folder sao lưu vừa được tạo ra tại: "+ Program.strDefaultPath,"Thông báo",MessageBoxButtons.OK,MessageBoxIcon.Information);
+            }
+            lbStorage.Text = "Nơi lưu backup device trong thiết bị của bạn là: " + Program.strDefaultPath; 
         }
 
         private void LoadBackupSets()
@@ -161,7 +168,7 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                     String StrBackup;
                     if (txtDbName.Text.Trim() == "" || deviceName == "") return;
 
-                    StrBackup = "BACKUP DATABASE " + txtDbName.Text.Trim() + " TO " + deviceName + " WITH NAME = N'"+backupName+"'";
+                    StrBackup = "BACKUP DATABASE [" + txtDbName.Text.Trim() + "] TO [" + deviceName + "] WITH NAME = N'"+backupName+"'";
                 if (ckDelOldBackups.Checked == true)
                     if (XtraMessageBox.Show("Bạn chắc chắn muốn xóa tất cả các bản sao lưu trước đó?", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                     {
@@ -374,11 +381,11 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
 
                 if (XtraMessageBox.Show("Bạn chắc chắc muốn phục hồi database ", "", MessageBoxButtons.OKCancel,MessageBoxIcon.Warning) == DialogResult.OK)
                 {
-                    String strRestore = " ALTER DATABASE " + txtDbName.Text.Trim()
-                    + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
-                    " USE tempdb RESTORE DATABASE " + txtDbName.Text.Trim()
-                    + " FROM   " + deviceName + " WITH FILE =  " + backupSetIndex + ", REPLACE  "
-                    + " ALTER DATABASE  " + txtDbName.Text.Trim() + " SET MULTI_USER";
+                    String strRestore = " ALTER DATABASE [" + txtDbName.Text.Trim()
+                    + "] SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
+                    " USE tempdb RESTORE DATABASE [" + txtDbName.Text.Trim()
+                    + "] FROM   [" + deviceName + "] WITH FILE =  " + backupSetIndex + ", REPLACE  "
+                    + " ALTER DATABASE  [" + txtDbName.Text.Trim() + "] SET MULTI_USER";
                     err = Program.ExecSqlNonQuery(strRestore, Program.connstr, "Lỗi phục hồi");
                     if (err == 0)
                         XtraMessageBox.Show("Phục hồi thành công", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
@@ -430,8 +437,8 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
 
 
                     //kiểm tra bản log: vì bản chất là khi restore về một thời điểm bất kỳ phải yêu cầu cả bản full backup và file log
-                    String StrTendevice = "use " + txtDbName.Text.Trim() +
-                        "\nselect  [Begin Time]  from  fn_dblog(null,null)" +
+                    String StrTendevice = "use [" + txtDbName.Text.Trim() +
+                        "] \nselect  [Begin Time]  from  fn_dblog(null,null)" +
                         "where[Begin Time] < '" + CheckTime + "'";
                     Program.reader = Program.ExecSqlDataReader(StrTendevice);
                     if (Program.reader == null) return;
@@ -448,14 +455,14 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                         try
                         {
                            
-                            String strRestore = "ALTER DATABASE " + txtDbName.Text.Trim() + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE \n" +
-                                " BACKUP LOG " + txtDbName.Text + " TO DISK ='" + Program.strDefaultPath + "/" + "DEVICE_DB" +
+                            String strRestore = "ALTER DATABASE [" + txtDbName.Text.Trim() + "] SET SINGLE_USER WITH ROLLBACK IMMEDIATE \n" +
+                                " BACKUP LOG [" + txtDbName.Text + "] TO DISK ='" + Program.strDefaultPath + "/" + "DEVICE_DB" +
                                 txtDbName.Text.Trim() + ".trn' WITH INIT, NORECOVERY; \n" 
                                 + " USE tempdb \n " +
-                                " RESTORE DATABASE " + txtDbName.Text.Trim() + " FROM DEVICE_DB" + txtDbName.Text.Trim() + " WITH FILE = " + ((DataRowView)backupSetBindingSource[0])["position"].ToString() + ",NORECOVERY; \n" +
-                                " RESTORE DATABASE " + txtDbName.Text.Trim() + " FROM DISK= '" + Program.strDefaultPath + "/" + "DEVICE_DB" + txtDbName.Text.Trim() + ".trn' " +
+                                " RESTORE DATABASE [" + txtDbName.Text.Trim() + "] FROM [DEVICE_DB" + txtDbName.Text.Trim() + "] WITH FILE = " + ((DataRowView)backupSetBindingSource[0])["position"].ToString() + ",NORECOVERY; \n" +
+                                " RESTORE DATABASE [" + txtDbName.Text.Trim() + "] FROM DISK= '" + Program.strDefaultPath + "/" + "DEVICE_DB" + txtDbName.Text.Trim() + ".trn' " +
                                 " WITH STOPAT= '" + strTempDatetimeBk + "' \n" +
-                                " ALTER DATABASE  " + txtDbName.Text.Trim() + " SET MULTI_USER ";
+                                " ALTER DATABASE  [" + txtDbName.Text.Trim() + "] SET MULTI_USER ";
                             //MessageBox.Show(strRestore);
                             err = Program.ExecSqlNonQuery(strRestore, Program.connstr, "Lỗi phục hồi csdl.");
                             if (err == 0)
@@ -467,11 +474,11 @@ namespace N18DCCN171_HuynhPhuocSang_backup_restore
                         catch (Exception ex)
                         {
                             XtraMessageBox.Show("Lỗi Restore:\n" + ex + "\n Tự động phục hồi về bản sao lưu mới nhất!", "Lỗi xảy ra", MessageBoxButtons.OK,MessageBoxIcon.Error);
-                            String strRestore = " ALTER DATABASE " + txtDbName.Text.Trim()
-                            + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
-                            " USE tempdb RESTORE DATABASE " + txtDbName.Text.Trim()
-                            + " FROM   " + deviceName + " WITH FILE =  " + ((DataRowView)backupSetBindingSource[0])["position"].ToString() + ", REPLACE  "
-                            + " ALTER DATABASE  " + txtDbName.Text.Trim() + " SET MULTI_USER";
+                            String strRestore = " ALTER DATABASE [" + txtDbName.Text.Trim()
+                            + "] SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
+                            " USE tempdb RESTORE DATABASE [" + txtDbName.Text.Trim()
+                            + "] FROM   " + deviceName + " WITH FILE =  " + ((DataRowView)backupSetBindingSource[0])["position"].ToString() + ", REPLACE  "
+                            + " ALTER DATABASE  [" + txtDbName.Text.Trim() + "] SET MULTI_USER";
                             err = Program.ExecSqlNonQuery(strRestore, Program.connstr, "Lỗi phục hồi");
                             if (err == 0)
                                 XtraMessageBox.Show("Phục hồi thành công", "Thông báo", MessageBoxButtons.OK,MessageBoxIcon.Information);
